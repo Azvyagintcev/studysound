@@ -299,21 +299,24 @@ if st.session_state.page == "Главная":
                         f"Match: {score:.2f} · {row['genre']} · {row['bpm']:.0f} BPM · энергия {row['energy_1_5']}/5")
 
                     vals = [row["energy_1_5"] / 5, min(row["bpm"] / 160, 1), min(row["centroid"] / 4000, 1)]
-                    # Горизонтальные полосы
+                    # 👇 ВСТАВЬ СЮДА НОВЫЙ КОД (ГОРИЗОНТАЛЬНЫЕ ПОЛОСЫ)
                     import plotly.express as px
+
                     fig = px.bar(
                         x=[row["energy_1_5"] / 5, min(row["bpm"] / 160, 1), min(row["centroid"] / 4000, 1)],
                         y=["Энергия", "Темп", "Яркость"],
                         orientation='h',
-                        color_discrete_sequence=["#FFFFFF"] # Белые полосы
+                        color_discrete_sequence=["#FFFFFF"]
                     )
                     fig.update_layout(
                         plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
                         font_color='#FFFFFF',
-                        xaxis=dict(range=[0,1], showgrid=False, showticklabels=False),
+                        xaxis=dict(range=[0, 1], showgrid=False, showticklabels=False),
                         yaxis=dict(showgrid=False),
                         margin=dict(l=20, r=20, t=20, b=20), height=200
                     )
+
+                    # 👇 ОСТАВЬ ТОЛЬКО ОДИН ВЫЗОВ PLOTLY_CHART
                     st.plotly_chart(fig, use_container_width=True, key=f"chart_{row['track_id']}")
                     fig.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 1])), showlegend=False,
                                       height=200, margin=dict(l=20, r=20, t=20, b=20), paper_bgcolor='rgba(0,0,0,0)',
