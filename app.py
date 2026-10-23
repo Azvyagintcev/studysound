@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -6,6 +7,8 @@ from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import semantic_search
 import json
+
+
 
 # --- НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -135,7 +138,7 @@ st.markdown("""
 # --- КОНТЕНТ САЙДБАРА ---
 with st.sidebar:
     # Добавляем логотип НИУ ВШЭ (используем официальный логотип с сайта)
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/HSE_logo.svg/512px-HSE_logo.svg.png", width=120)
+    st.image("hse_logo.png", width=120)
     st.markdown("### StudySound Recommender")
     st.caption("Проект при поддержке НИУ ВШЭ")
 
@@ -160,12 +163,51 @@ with st.sidebar:
 st.title("🎧 StudySound Recommender")
 st.caption("Подберём фоновую музыку под вашу задачу и состояние")
 
+# --- АНИМАЦИЯ ЗАГРУЗКИ ---
+loading_placeholder = st.empty()
+with loading_placeholder.container():
+    st.markdown("""
+        <style>
+        /* Крутящийся лоадер в цветах ВШЭ */
+        .hse-loader {
+            border: 8px solid #E6F0FF; /* Светло-голубой фон */
+            border-top: 8px solid #0050CF; /* Фирменный синий ВШЭ */
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1s linear infinite;
+            margin: 15% auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hse-loader-text {
+            text-align: center;
+            color: #0050CF;
+            font-family: 'Arial', sans-serif;
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        </style>
+        <div class="hse-loader"></div>
+        <div class="hse-loader-text">Нейросеть просыпается... Подгружаем треки...</div>
+    """, unsafe_allow_html=True)
+
+# Небольшая пауза, чтобы пользователь успел увидеть анимацию даже на быстрых запусках
+time.sleep(1.5)
+
+# --- ЗАГРУЗКА МОДЕЛИ И ДАННЫХ ---
 try:
     model = load_model()
     df, doc_embs = load_data()
 except Exception as e:
     st.error(f"Ошибка загрузки: {e}")
     st.stop()
+
+# Убираем анимацию, так как всё загрузилось
+loading_placeholder.empty()
 
 # --- ДВЕ ВКЛАДКИ ---
 tab_search, tab_playlist = st.tabs(["🔍 Поиск музыки", f"❤️ Мой плейлист ({len(st.session_state.liked_ids)})"])
@@ -198,7 +240,7 @@ with tab_search:
             if liked_indices:
                 liked_embs = doc_embs[liked_indices]
                 liked_profile = np.mean(liked_embs, axis=0)
-                q_emb = 0.7 * q_emb + 0.3 * liked_profile
+                q_emb = 0.8 * q_emb + 0.2 * liked_profile
                 q_emb = q_emb / np.linalg.norm(q_emb)
 
         hits = semantic_search(q_emb, doc_embs, top_k=min(len(df), 50))[0]
@@ -206,20 +248,35 @@ with tab_search:
         results = []
         for h in hits:
             row = df.iloc[h["corpus_id"]]
+
+            text_for_task = str(row.get('suitability', '')) + str(row.get('description_ru', ''))
+            task_match = 1.0 if str(task) in text_for_task else 0.0
+            penalty = 0.6 if (vocal == "no" and row["vocal"] == "yes") else 0.0
+
             if str(row['track_id']) in st.session_state.disliked_ids:
                 continue
 
             e_sim = 1 - abs(row["energy_1_5"] - energy) / 4
             b_sim = max(0.0, 1 - abs(row["bpm"] - TEMPO_BPM[tempo]) / 50)
-            penalty = 0.25 if (vocal == "no" and row["vocal"] == "yes") else 0.0
-            final = 0.7 * h["score"] + 0.3 * (0.6 * e_sim + 0.4 * b_sim) - penalty
+            audio_sim = (0.6 * e_sim + 0.4 * b_sim)
 
+            final = (0.5 * h["score"]) + (0.5 * audio_sim) + (0.2 * task_match) - penalty
             if str(row['track_id']) in st.session_state.liked_ids:
                 final += 0.1
 
             results.append((final, row))
 
         results.sort(key=lambda x: x[0], reverse=True)
+
+        unique_results = []
+        seen_ids = set()
+        for score, row in results:
+            if row['track_id'] not in seen_ids:
+                unique_results.append((score, row))
+                seen_ids.add(row['track_id'])
+            if len(unique_results) == 5:
+                break
+
         st.session_state.results = results
 
     if st.session_state.results:
