@@ -129,6 +129,23 @@ st.markdown("""
         div[data-testid="stFormSubmitButton"] > button:hover {
             background-color: #CCCCCC !important;
         }
+        div[data-testid="stFormSubmitButton"] > button:hover {
+            background-color: #CCCCCC !important;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        [data-testid="stMainBlockContainer"] {
+            animation: fadeInUp 0.4s ease-out forwards;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -171,6 +188,8 @@ with loading_placeholder.container():
         </div>
         <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
     """, unsafe_allow_html=True)
+
+
 
 try:
     model = load_model()
