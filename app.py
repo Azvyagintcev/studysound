@@ -366,31 +366,27 @@ elif st.session_state.page == "Вкус":
         c3.metric("Средняя энергия", f"{liked_df['energy_1_5'].mean():.1f} / 5")
 
         st.write("---")
-        st.subheader("Ваши любимые жанры")
+        st.subheader("Ваше любимое настроение")
 
-        # 1. Очищаем данные от 'none', пустых строк и пробелов
+        # Берем колонку 'mood' вместо 'genre'
         clean_df = liked_df.copy()
-        clean_df['genre'] = clean_df['genre'].astype(str).str.strip()
-        valid_genres = clean_df[~clean_df['genre'].str.lower().isin(['none', 'nan', '', 'undefined'])]
+        clean_df['mood'] = clean_df['mood'].astype(str).str.strip()
 
-        # 2. Логика отображения
-        genre_counts = valid_genres['genre'].value_counts()
+        # Убираем пустые значения или 'none'
+        valid_moods = clean_df[~clean_df['mood'].str.lower().isin(['none', 'nan', '', 'undefined'])]
+        mood_counts = valid_moods['mood'].value_counts()
 
-        if genre_counts.empty:
-            st.info(
-                "💡 Среди ваших любимых треков нет указанного жанра (везде стоит 'none'). Нейросеть анализирует другие параметры (BPM и энергию), которые вы видите выше.")
-
-        elif len(genre_counts) == 1:
-            # Если жанр всего один, график рисовать некрасиво. Покажем его крупно.
-            st.markdown(f"### Ваш главный жанр: **{genre_counts.index[0].capitalize()}**")
-
+        if mood_counts.empty:
+            st.info("💡 В ваших любимых треках не указано настроение.")
+        elif len(mood_counts) == 1:
+            st.markdown(f"### Ваше главное настроение: **{mood_counts.index[0].capitalize()}**")
         else:
-            # Если жанров несколько, рисуем горизонтальные полосы
+            # Красивый горизонтальный график настроений
             import plotly.express as px
 
             fig = px.bar(
-                x=genre_counts.values,
-                y=genre_counts.index,
+                x=mood_counts.values,
+                y=mood_counts.index,
                 orientation='h',
                 color_discrete_sequence=["#FFFFFF"]
             )
@@ -401,7 +397,7 @@ elif st.session_state.page == "Вкус":
                 yaxis=dict(showgrid=False, title=""),
                 margin=dict(l=20, r=20, t=20, b=20), height=250
             )
-            st.plotly_chart(fig, use_container_width=True, key="genre_chart")
+            st.plotly_chart(fig, use_container_width=True, key="mood_chart")
 # СТРАНИЦА 3: ПЛЕЙЛИСТ
 # ==========================================
 elif st.session_state.page == "Плейлист":
