@@ -367,10 +367,41 @@ elif st.session_state.page == "Вкус":
 
         st.write("---")
         st.subheader("Ваши любимые жанры")
-        genre_counts = liked_df['genre'].value_counts()
-        st.bar_chart(genre_counts, color="#FFFFFF")
 
-# ==========================================
+        # 1. Очищаем данные от 'none', пустых строк и пробелов
+        clean_df = liked_df.copy()
+        clean_df['genre'] = clean_df['genre'].astype(str).str.strip()
+        valid_genres = clean_df[~clean_df['genre'].str.lower().isin(['none', 'nan', '', 'undefined'])]
+
+        # 2. Логика отображения
+        genre_counts = valid_genres['genre'].value_counts()
+
+        if genre_counts.empty:
+            st.info(
+                "💡 Среди ваших любимых треков нет указанного жанра (везде стоит 'none'). Нейросеть анализирует другие параметры (BPM и энергию), которые вы видите выше.")
+
+        elif len(genre_counts) == 1:
+            # Если жанр всего один, график рисовать некрасиво. Покажем его крупно.
+            st.markdown(f"### Ваш главный жанр: **{genre_counts.index[0].capitalize()}**")
+
+        else:
+            # Если жанров несколько, рисуем горизонтальные полосы
+            import plotly.express as px
+
+            fig = px.bar(
+                x=genre_counts.values,
+                y=genre_counts.index,
+                orientation='h',
+                color_discrete_sequence=["#FFFFFF"]
+            )
+            fig.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                font_color='#FFFFFF',
+                xaxis=dict(showgrid=True, gridcolor='#333333', title="Количество треков"),
+                yaxis=dict(showgrid=False, title=""),
+                margin=dict(l=20, r=20, t=20, b=20), height=250
+            )
+            st.plotly_chart(fig, use_container_width=True, key="genre_chart")
 # СТРАНИЦА 3: ПЛЕЙЛИСТ
 # ==========================================
 elif st.session_state.page == "Плейлист":
