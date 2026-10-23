@@ -21,7 +21,7 @@ def main():
         print(f"ОШИБКА: Файл {CSV} не найден. Положите tracks.csv в папку data/")
         return
 
-    df = pd.read_csv(CSV, sep=';', on_bad_lines='skip', encoding='latin1')
+    df = pd.read_csv(CSV, sep=None, engine='python', on_bad_lines='skip', encoding='utf-8')
     df = df.fillna("")
     print(f"Загружено треков: {len(df)}")
 

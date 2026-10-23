@@ -28,8 +28,9 @@ def load_model():
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv(DATA / "tracks.csv", sep=';', on_bad_lines='skip', encoding='latin1')
-    df.columns = df.columns.str.strip().str.replace('ï»¿', '', regex=False).str.replace('\ufeff', '', regex=False)
+    df = pd.read_csv(DATA / "tracks.csv", sep=None, engine='python', on_bad_lines='skip', encoding='utf-8')
+    df.columns = df.columns.str.strip().str.replace('\ufeff', '', regex=False)
+
     embs = np.load(DATA / "embeddings.npy")
     feats = pd.read_csv(DATA / "audio_features.csv")
     return df.join(feats), embs
