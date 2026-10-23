@@ -64,73 +64,83 @@ if 'liked_ids' not in st.session_state:
     st.session_state.disliked_ids = disliked
 if 'results' not in st.session_state:
     st.session_state.results = None
-
-# ==========================================
-# ФИРМЕННЫЙ СТИЛЬ НИУ ВШЭ (CSS)
-# ==========================================
 st.markdown("""
     <style>
         /* Глобальные настройки шрифта */
         html, body, [class*="css"] {
-            font-family: 'HSE Sans', 'Arial', sans-serif;
+            font-family: 'Helvetica Neue', 'Arial', sans-serif;
         }
 
-        /* Фирменный темно-синий фон для всего приложения */
+        /* Абсолютно черный фон */
         .stApp {
-            background-color: #001633; /* Очень темный оттенок фирменного синего */
+            background-color: #000000;
             color: #FFFFFF;
         }
 
-        /* Сайдбар в фирменном синем цвете НИУ ВШЭ */
+        /* Сайдбар в темно-сером цвете с белой границей */
         [data-testid="stSidebar"] {
-            background-image: linear-gradient(180deg, #002D6E 0%, #001633 100%);
-            border-right: 2px solid #0050CF;
+            background-image: linear-gradient(180deg, #121212 0%, #000000 100%);
+            border-right: 1px solid #333333;
         }
 
-        /* Светлый текст в сайдбаре */
+        /* Белый текст в сайдбаре */
         [data-testid="stSidebar"] * {
-            color: #E6F0FF !important; 
+            color: #FFFFFF !important; 
         }
 
         /* Аккордеоны в сайдбаре */
         [data-testid="stSidebar"] .streamlit-expanderHeader {
-            background-color: #0050CF;
+            background-color: #222222;
             border-radius: 8px;
             color: #FFFFFF;
+            border: 1px solid #444;
         }
 
-        /* Заголовки и акцентный текст */
+        /* Заголовки с тонкой белой линией снизу */
         h1, h2, h3 {
             color: #FFFFFF !important;
-            border-bottom: 2px solid #0050CF;
+            border-bottom: 1px solid #444444;
             padding-bottom: 10px;
+            font-weight: 300;
         }
 
-        /* Кнопки в фирменном стиле */
+        /* Белые кнопки с черным текстом */
         .stButton>button {
-            background-color: #0050CF;
-            color: white;
-            border: none;
+            background-color: #FFFFFF;
+            color: #000000;
+            border: 1px solid #FFFFFF;
             border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .stButton>button:hover {
+            background-color: #CCCCCC;
+            color: #000000;
+            border: 1px solid #CCCCCC;
+        }
+
+        /* Кнопка отправки формы */
+        div[data-testid="stFormSubmitButton"] > button {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+            border: none;
             font-weight: bold;
             transition: 0.3s;
         }
-        .stButton>button:hover {
-            background-color: #002D6E;
-            color: #FFFFFF;
-            border: 1px solid #0050CF;
+        div[data-testid="stFormSubmitButton"] > button:hover {
+            background-color: #CCCCCC !important;
         }
 
-        /* Карточки треков */
+        /* Карточки треков (темно-серые с тонкой рамкой) */
         [data-testid="stVerticalBlockBorderWrapper"] {
-            background-color: #0A1C3A;
-            border: 1px solid #0050CF;
+            background-color: #111111;
+            border: 1px solid #333333;
             border-radius: 12px;
         }
 
-        /* Метрики */
+        /* Белые метрики */
         [data-testid="stMetricValue"] {
-            color: #0050CF;
+            color: #FFFFFF;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -296,7 +306,7 @@ with tab_search:
 
                     vals = [row["energy_1_5"] / 5, min(row["bpm"] / 160, 1), min(row["centroid"] / 4000, 1)]
                     fig = go.Figure(go.Scatterpolar(r=vals + [vals[0]], theta=["Энергия", "Темп", "Яркость", "Энергия"],
-                                                    fill="toself", line_color="#0050CF"))
+                                                    fill="toself", line_color="#FFFFFF"))  # <-- Белая линия
                     fig.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 1])), showlegend=False,
                                       height=200, margin=dict(l=20, r=20, t=20, b=20), paper_bgcolor='rgba(0,0,0,0)',
                                       plot_bgcolor='rgba(0,0,0,0)')
