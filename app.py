@@ -268,6 +268,9 @@ if st.session_state.page == "Главная":
 
             if str(row['track_id']) in st.session_state.disliked_ids:
                 continue
+            # Пропускаем треки, у которых нет названия
+            if str(row['title']).strip().upper() == "ОТСУТСТВУЕТ":
+                continue
 
             e_sim = 1 - abs(row["energy_1_5"] - energy) / 4
             b_sim = max(0.0, 1 - abs(row["bpm"] - TEMPO_BPM[tempo]) / 50)
