@@ -290,7 +290,7 @@ if st.session_state.page == "Главная":
 
     if st.session_state.results:
         st.subheader("Твой микс прямо сейчас")
-        for score, row in st.session_state.results[:5]:
+        for i, (score, row) in enumerate(st.session_state.results[:5]):
             with st.container(border=True):
                 col1, col2 = st.columns([2, 1])
                 with col1:
@@ -320,7 +320,7 @@ if st.session_state.page == "Главная":
                     fig.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 1])), showlegend=False,
                                       height=200, margin=dict(l=20, r=20, t=20, b=20), paper_bgcolor='rgba(0,0,0,0)',
                                       plot_bgcolor='rgba(0,0,0,0)')
-                    st.plotly_chart(fig, use_container_width=True, key=f"chart_{row['track_id']}")
+                    st.plotly_chart(fig, use_container_width=True, key=f"chart_{i}_{row['track_id']}")
 
                 with col2:
                     audio_path = DATA / row["file_path"]
@@ -333,7 +333,7 @@ if st.session_state.page == "Главная":
                     is_liked = str(row['track_id']) in st.session_state.liked_ids
                     is_disliked = str(row['track_id']) in st.session_state.disliked_ids
 
-                    if btn_col1.button("❤️" if is_liked else "🤍", key=f"like_{row['track_id']}",
+                    if btn_col1.button("❤️" if is_liked else "🤍", key=f"like_{i}_{row['track_id']}",
                                        use_container_width=True):
                         if is_liked:
                             st.session_state.liked_ids.remove(str(row['track_id']))
