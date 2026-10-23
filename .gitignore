@@ -2,9 +2,6 @@
 model_e5/
 __pycache__/
 *.pyc
-data/audio/
-data/embeddings.npy
-data/audio_features.csv
 user_data.json
 .idea/
 .DS_Store

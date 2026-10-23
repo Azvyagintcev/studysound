@@ -21,11 +21,9 @@ DATA = Path("data")
 TEMPO_BPM = {"медленный": 70, "средний": 100, "быстрый": 130}
 DATA_FILE = Path("user_data.json")
 
-
-# --- ЗАГРУЗКА МОДЕЛИ И ДАННЫХ ---
 @st.cache_resource
 def load_model():
-    return SentenceTransformer("./model_e5", device="cpu", local_files_only=True)
+    return SentenceTransformer("intfloat/multilingual-e5-small", device="cpu")
 
 
 @st.cache_data
@@ -277,7 +275,7 @@ with tab_search:
             if len(unique_results) == 5:
                 break
 
-        st.session_state.results = results
+        st.session_state.results = unique_results
 
     if st.session_state.results:
         st.subheader("Ваша подборка")
