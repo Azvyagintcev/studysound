@@ -5,3 +5,4 @@ __pycache__/
 user_data.json
 .idea/
 .DS_Store
+.streamlit/secrets.toml

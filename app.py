@@ -172,6 +172,10 @@ st.markdown("""
         [data-testid="stMainBlockContainer"] {
             animation: fadeInUp 0.4s ease-out forwards;
         }
+        /* Скрываем стандартный индикатор загрузки Streamlit */
+        [data-testid="stStatusWidget"] {
+            display: none !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
