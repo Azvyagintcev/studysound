@@ -270,8 +270,6 @@ if st.session_state.page == "Главная":
                                     task) if 'task' in locals() else 0)
             energy = st.slider("Энергия (1–5)", 1, 5, energy if 'energy' in locals() else 3)
         with c2:
-            vocal = st.radio("Вокал", ["no", "yes"], format_func=lambda x: "без вокала" if x == "no" else "можно",
-                             index=0 if ('vocal' not in locals() or vocal == "no") else 1)
             tempo = st.select_slider("Темп", ["медленный", "средний", "быстрый"],
                                      value=tempo if 'tempo' in locals() else "средний")
         with c3:
@@ -283,7 +281,7 @@ if st.session_state.page == "Главная":
 
     if submitted or st.session_state.get('quick_search', False):
         st.session_state.quick_search = False
-        query = f"Задача: {task}. Энергия: {energy}/5. Вокал: {vocal}. Темп: {tempo}. Настроение: {mood}. Жанр: {genre}."
+        query = f"Задача: {task}. Энергия: {energy}/5. Темп: {tempo}. Настроение: {mood}. Жанр: {genre}."
         q_emb = model.encode(query, normalize_embeddings=True)
 
         if st.session_state.liked_ids:
@@ -302,7 +300,6 @@ if st.session_state.page == "Главная":
             row = df.iloc[h["corpus_id"]]
             text_for_task = str(row.get('suitability', '')) + str(row.get('description_ru', ''))
             task_match = 1.0 if str(task) in text_for_task else 0.0
-            penalty = 0.6 if (vocal == "no" and row["vocal"] == "yes") else 0.0
 
             if str(row['track_id']) in st.session_state.disliked_ids:
                 continue
@@ -313,7 +310,7 @@ if st.session_state.page == "Главная":
             e_sim = 1 - abs(row["energy_1_5"] - energy) / 4
             b_sim = max(0.0, 1 - abs(row["bpm"] - TEMPO_BPM[tempo]) / 50)
             audio_sim = (0.6 * e_sim + 0.4 * b_sim)
-            final = (0.5 * h["score"]) + (0.5 * audio_sim) + (0.2 * task_match) - penalty
+            final = (0.5 * h["score"]) + (0.5 * audio_sim) + (0.2 * task_match)
 
             if str(row['track_id']) in st.session_state.liked_ids:
                 final += 0.1
