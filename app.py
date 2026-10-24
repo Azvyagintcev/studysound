@@ -373,8 +373,7 @@ if st.session_state.page == "Главная":
                     else:
                         st.warning("Аудиофайл не найден")
 
-                    st.caption(f"Лицензия: {row['license']}")
-
+                    st.caption(f"Лицензия: {row.get('license', 'Не указана')}")
                     btn_col1, btn_col2 = st.columns(2)
                     is_liked = str(row['track_id']) in st.session_state.liked_ids
                     is_disliked = str(row['track_id']) in st.session_state.disliked_ids
