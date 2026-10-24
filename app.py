@@ -359,8 +359,21 @@ if st.session_state.page == "Главная":
                     audio_path = DATA / row["file_path"]
                     if audio_path.exists():
                         st.audio(str(audio_path))
+
+                        # 👇 НОВАЯ КНОПКА СКАЧИВАНИЯ 👇
+                        with open(audio_path, "rb") as file:
+                            st.download_button(
+                                label="📥 Скачать трек",
+                                data=file,
+                                file_name=f"{row['artist']} - {row['title']}.mp3",
+                                mime="audio/mpeg",
+                                use_container_width=True,
+                                key=f"dl_main_{i}_{row['track_id']}"
+                            )
                     else:
                         st.warning("Аудиофайл не найден")
+
+                    st.caption(f"Лицензия: {row['license']}")
 
                     btn_col1, btn_col2 = st.columns(2)
                     is_liked = str(row['track_id']) in st.session_state.liked_ids
@@ -373,18 +386,16 @@ if st.session_state.page == "Главная":
                         else:
                             st.session_state.liked_ids.add(str(row['track_id']))
                             st.session_state.disliked_ids.discard(str(row['track_id']))
-                        # Вместо старого save_user_data() пиши:
                         save_user_data(st.session_state.user_email, st.session_state.liked_ids,
                                        st.session_state.disliked_ids)
                         st.rerun()
-                    if btn_col2.button("❌" if is_disliked else "👎", key=f"dislike_{row['track_id']}",
+                    if btn_col2.button("❌" if is_disliked else "👎", key=f"dislike_{i}_{row['track_id']}",
                                        use_container_width=True):
                         if is_disliked:
                             st.session_state.disliked_ids.remove(str(row['track_id']))
                         else:
                             st.session_state.disliked_ids.add(str(row['track_id']))
                             st.session_state.liked_ids.discard(str(row['track_id']))
-                        # Вместо старого save_user_data() пиши:
                         save_user_data(st.session_state.user_email, st.session_state.liked_ids,
                                        st.session_state.disliked_ids)
                         st.rerun()
@@ -461,9 +472,22 @@ elif st.session_state.page == "Плейлист":
                     audio_path = DATA / row["file_path"]
                     if audio_path.exists():
                         st.audio(str(audio_path))
+
+                        # 👇 КНОПКА СКАЧИВАНИЯ ДЛЯ ПЛЕЙЛИСТА 👇
+                        with open(audio_path, "rb") as file:
+                            st.download_button(
+                                label="📥 Скачать трек",
+                                data=file,
+                                file_name=f"{row['artist']} - {row['title']}.mp3",
+                                mime="audio/mpeg",
+                                use_container_width=True,
+                                key=f"dl_playlist_{row['track_id']}"
+                            )
+                    else:
+                        st.warning("Файл не найден")
+
                     if st.button("🗑️ Удалить", key=f"remove_{row['track_id']}", use_container_width=True):
                         st.session_state.liked_ids.remove(str(row['track_id']))
-                        # Вместо старого save_user_data() пиши:
                         save_user_data(st.session_state.user_email, st.session_state.liked_ids,
                                        st.session_state.disliked_ids)
                         st.rerun()
