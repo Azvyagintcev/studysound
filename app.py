@@ -183,8 +183,6 @@ st.markdown("""
 with st.sidebar:
     # Логотип (если он есть, он будет белым, если нет - оставь заглушку)
     st.markdown("<h2 style='text-align: center;'>🎧 StudySound</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 12px; color: #666;'>При поддержке НИУ ВШЭ</p>",
-                unsafe_allow_html=True)
     st.divider()
 
     if st.button("🏠 Главная", use_container_width=True):
@@ -242,7 +240,7 @@ loading_placeholder.empty()
 # СТРАНИЦА 1: ГЛАВНАЯ (ПОИСК)
 # ==========================================
 if st.session_state.page == "Главная":
-    st.title("StudySound: Подберём музыку под твою задачу")
+    st.title("StudySound: Подберём музыку твою задачу")
     st.write("Выбери параметры, и нейросеть найдет идеальный трек.")
     st.write("---")
 
