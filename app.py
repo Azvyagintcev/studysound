@@ -7,6 +7,7 @@ from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import semantic_search
 import json
+import _sqlite3
 
 # --- НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -14,6 +15,13 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# --- ПРОВЕРКА АВТОРИЗАЦИИ ---
+if not st.user.is_logged_in:
+    st.title("🎧 StudySound")
+    st.subheader("Пожалуйста, войдите, чтобы сохранять свои плейлисты.")
+    st.button("Войти через Google", on_click=st.login)
+    st.stop()  # Останавливаем приложение, пока пользователь не войдет
 
 DATA = Path("data")
 TEMPO_BPM = {"медленный": 70, "средний": 100, "быстрый": 130}
@@ -35,32 +43,50 @@ def load_data():
     return df.join(feats), embs
 
 
-# --- СОХРАНЕНИЕ ПРЕДПОЧТЕНИЙ ---
-def load_user_data():
-    if DATA_FILE.exists():
-        try:
-            with open(DATA_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                return set(data.get("liked_ids", [])), set(data.get("disliked_ids", []))
-        except (json.JSONDecodeError, KeyError):
-            pass
+import sqlite3
+
+DB_FILE = "studysound.db"
+
+def init_db():
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS user_prefs
+                 (user_email TEXT PRIMARY KEY,
+                  liked_ids TEXT,
+                  disliked_ids TEXT)''')
+    conn.commit()
+    conn.close()
+
+init_db()  # создаём таблицу при запуске
+
+def load_user_data(user_email):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("SELECT liked_ids, disliked_ids FROM user_prefs WHERE user_email = ?", (user_email,))
+    row = c.fetchone()
+    conn.close()
+    if row:
+        liked = set(json.loads(row[0])) if row[0] else set()
+        disliked = set(json.loads(row[1])) if row[1] else set()
+        return liked, disliked
     return set(), set()
 
-
-def save_user_data():
-    data = {
-        "liked_ids": list(st.session_state.liked_ids),
-        "disliked_ids": list(st.session_state.disliked_ids)
-    }
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
+def save_user_data(user_email, liked, disliked):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''INSERT OR REPLACE INTO user_prefs (user_email, liked_ids, disliked_ids)
+                 VALUES (?, ?, ?)''',
+              (user_email, json.dumps(list(liked)), json.dumps(list(disliked))))
+    conn.commit()
+    conn.close()
 
 # --- ИНИЦИАЛИЗАЦИЯ ПАМЯТИ ---
 if 'liked_ids' not in st.session_state:
-    liked, disliked = load_user_data()
+    user_email = st.user.email
+    liked, disliked = load_user_data(user_email)
     st.session_state.liked_ids = liked
     st.session_state.disliked_ids = disliked
+    st.session_state.user_email = user_email
 if 'results' not in st.session_state:
     st.session_state.results = None
 if 'page' not in st.session_state:
@@ -175,9 +201,17 @@ with st.sidebar:
         st.session_state.liked_ids = set()
         st.session_state.disliked_ids = set()
         st.session_state.results = None
-        save_user_data()
+        save_user_data(st.session_state.user_email, st.session_state.liked_ids, st.session_state.disliked_ids)
         st.rerun()
 
+    if st.user.is_logged_in:
+        st.divider()
+        st.caption(f"Вы вошли как:\n**{st.user.email}**")
+        if st.button("🚪 Выйти из аккаунта", use_container_width=True):
+            # Очищаем локальную память перед выходом, чтобы данные не перепутались
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.logout()  # Встроенная функция Streamlit для выхода
 # --- АНИМАЦИЯ ЗАГРУЗКИ ---
 loading_placeholder = st.empty()
 with loading_placeholder.container():
@@ -338,7 +372,9 @@ if st.session_state.page == "Главная":
                         else:
                             st.session_state.liked_ids.add(str(row['track_id']))
                             st.session_state.disliked_ids.discard(str(row['track_id']))
-                        save_user_data()
+                        # Вместо старого save_user_data() пиши:
+                        save_user_data(st.session_state.user_email, st.session_state.liked_ids,
+                                       st.session_state.disliked_ids)
                         st.rerun()
                     if btn_col2.button("❌" if is_disliked else "👎", key=f"dislike_{row['track_id']}",
                                        use_container_width=True):
@@ -347,7 +383,9 @@ if st.session_state.page == "Главная":
                         else:
                             st.session_state.disliked_ids.add(str(row['track_id']))
                             st.session_state.liked_ids.discard(str(row['track_id']))
-                        save_user_data()
+                        # Вместо старого save_user_data() пиши:
+                        save_user_data(st.session_state.user_email, st.session_state.liked_ids,
+                                       st.session_state.disliked_ids)
                         st.rerun()
 
 # ==========================================
@@ -424,7 +462,9 @@ elif st.session_state.page == "Плейлист":
                         st.audio(str(audio_path))
                     if st.button("🗑️ Удалить", key=f"remove_{row['track_id']}", use_container_width=True):
                         st.session_state.liked_ids.remove(str(row['track_id']))
-                        save_user_data()
+                        # Вместо старого save_user_data() пиши:
+                        save_user_data(st.session_state.user_email, st.session_state.liked_ids,
+                                       st.session_state.disliked_ids)
                         st.rerun()
 
 # ==========================================

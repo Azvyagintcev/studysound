@@ -5,3 +5,5 @@ soundfile
 numpy
 pandas
 plotly
+Authlib
+httpx
