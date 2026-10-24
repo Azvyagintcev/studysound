@@ -303,17 +303,18 @@ if st.session_state.page == "Главная":
 
             if str(row['track_id']) in st.session_state.disliked_ids:
                 continue
+            if str(row['track_id']) in st.session_state.liked_ids:
+                continue
             # Пропускаем треки, у которых нет названия
             if str(row['title']).strip().upper() == "ОТСУТСТВУЕТ":
                 continue
+
 
             e_sim = 1 - abs(row["energy_1_5"] - energy) / 4
             b_sim = max(0.0, 1 - abs(row["bpm"] - TEMPO_BPM[tempo]) / 50)
             audio_sim = (0.6 * e_sim + 0.4 * b_sim)
             final = (0.5 * h["score"]) + (0.5 * audio_sim) + (0.2 * task_match)
 
-            if str(row['track_id']) in st.session_state.liked_ids:
-                final += 0.1
             results.append((final, row))
 
         results.sort(key=lambda x: x[0], reverse=True)
